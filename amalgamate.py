@@ -123,7 +123,7 @@ class TranslationUnit(object):
 		if match:
 			contexts.append(match)
 			return match.end()
-		return index + 1
+		return index + 2
 	
 	# Include all trivial #include directives into self.content.
 	def _include_files(self):
