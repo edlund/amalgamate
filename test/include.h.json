@@ -1,0 +1,11 @@
+{
+	"project": "include.h",
+	"target": "include.h",
+	"sources": [
+		"include/all.h"
+	],
+	"include_paths": [
+		"include"
+	]
+}
+

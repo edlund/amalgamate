@@ -1,0 +1,13 @@
+{
+	"project": "source.c",
+	"target": "source.c",
+	"sources": [
+		"source/main.c",
+		"source/foo.c",
+		"source/bar.c"
+	],
+	"include_paths": [
+		"include"
+	]
+}
+

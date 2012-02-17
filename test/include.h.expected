@@ -1,0 +1,45 @@
+/**
+ * This is a test header prologue file.
+ */
+#ifndef ALL_H
+#define ALL_H
+
+// #include "foo.h"
+#ifndef FOO_H
+#define FOO_H
+
+// #include "bar.h"
+// #include <bar.h>
+/* #include "bar.h" */
+/* #include <bar.h> */
+
+int foo();
+
+#endif // FOO_H
+
+
+// #include "bar.h"
+#ifndef BAR_H
+#define BAR_H
+
+// #include "foo.h"
+
+
+int bar();
+
+#endif // BAR_H
+
+
+// #include "test.h"
+#ifndef TEST_H
+#define TEST_H
+
+#undef NDEBUG
+#include <assert.h>
+
+#endif // TEST_H
+
+
+
+#endif // ALL_H
+
