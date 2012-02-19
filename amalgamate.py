@@ -108,7 +108,7 @@ class TranslationUnit(object):
 	c_comment_pattern = re.compile(r"/\*.*?\*/", re.S)
 	
 	# "complex \"stri\\\ng\" value".
-	string_pattern = re.compile("[^'\"]" r'".*?(?<=[^\\])"', re.S)
+	string_pattern = re.compile("[^']" r'".*?(?<=[^\\])"', re.S)
 	
 	# Handle simple include directives. Support for advanced
 	# directives where macros and defines needs to expanded is

@@ -28,6 +28,8 @@ const char* include_multiple = "\
 \"#include <test.h>\" \
 ";
 
+const char* include_concat = """#include <foo.h>";
+
 int main(int argc, char* argv[])
 {
 	(void)argc;
