@@ -32,6 +32,11 @@ preceded by a backslash character (see 5.1.1.2p1.2 of ISO C99).
 C++11 will definitely cause problems:
 
         R"delimiter(Terrible raw \ data " #include <sneaky.hpp>)delimiter"
+        R"delimiter(Terrible raw \ data " escaping)delimiter"
+
+In the examples above, `amalgamate.py` will stop parsing the raw string literal
+when it encounters the first quotation mark, which will produce unexpected
+results.
 
 ## Installing amalgamate.py
 
