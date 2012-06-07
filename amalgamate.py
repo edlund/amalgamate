@@ -127,7 +127,8 @@ class TranslationUnit(object):
 	
 	# Include all trivial #include directives into self.content.
 	def _include_files(self):
-		if len(self.content) < len("#include <x>"):
+		content_len = len(self.content)
+		if content_len < len("#include <x>"):
 			return 0
 		
 		# Find contexts in the content in which a found include
@@ -137,7 +138,7 @@ class TranslationUnit(object):
 		# Walk through the content char by char, and try to grab
 		# skippable contexts using regular expressions when found.
 		i = 1
-		while i < len(self.content):
+		while i < content_len:
 			j = i - 1
 			current = self.content[i]
 			previous = self.content[j]
