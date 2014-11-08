@@ -40,20 +40,24 @@ import sys
 
 class Amalgamation(object):
 	
-	# Determine if the given file_path can be found on either
-	# self.source_path or one of the include paths.
-	def file_path(self, file_path, include_paths=None):
-		if include_paths == None:
-			include_paths = self.include_paths
+	# Prepends self.source_path to file_path if needed.
+	def actual_path(self, file_path):
+		if not os.path.isabs(file_path):
+			file_path = os.path.join(self.source_path, file_path)
+		return file_path
 		
-		paths = [os.path.join(self.source_path, path)
-			for path in include_paths]
-		paths.insert(0, self.source_path)
-		for path in paths:
-			tmp_path = os.path.join(path, file_path)
-			if os.path.exists(tmp_path):
-				return tmp_path
-		return None
+	# Search included file_path in self.include_paths and
+	# in source_dir if specified.
+	def find_included_file(self, file_path, source_dir):
+		search_dirs = self.include_paths[:]
+		if source_dir:
+			search_dirs.insert(0, source_dir)
+
+		for search_dir in search_dirs:
+			search_path = os.path.join(search_dir, file_path)
+			if os.path.isfile(self.actual_path(search_path)):
+				return search_path
+		return None		
 	
 	def __init__(self, args):
 		with open(args.config, 'r') as f:
@@ -83,11 +87,9 @@ class Amalgamation(object):
 		for file_path in self.sources:
 			# Do not check the include paths while processing the source
 			# list, all given source paths must be correct.
-			actual_path = self.file_path(file_path, [])
-			if not actual_path:
-				raise IOError("File not found: \"{0}\"".format(file_path))
-			print(" - processing \"{0}\"".format(actual_path))
-			t = TranslationUnit(actual_path, self, True)
+			actual_path = self.actual_path(file_path)
+			print(" - processing \"{0}\"".format(file_path))
+			t = TranslationUnit(file_path, self, True)
 			amalgamation += t.content
 		
 		with open(self.target, 'w') as f:
@@ -214,9 +216,11 @@ class TranslationUnit(object):
 		while include_match:
 			if not TranslationUnit._is_within(include_match, skippable_contexts):
 				include_path = include_match.group("path")
-				actual_path = self.amalgamation.file_path(include_path)
-				if actual_path:
-					includes.append((include_match, actual_path))
+				search_same_dir = include_match.group(1) == '"'
+				found_included_path = self.amalgamation.find_included_file(
+					include_path, self.file_dir if search_same_dir else None)
+				if found_included_path:
+					includes.append((include_match, found_included_path))
 			
 			include_match = self.include_pattern.search(self.content,
 				include_match.end())
@@ -225,11 +229,11 @@ class TranslationUnit(object):
 		prev_end = 0
 		tmp_content = ''
 		for include in includes:
-			include_match, actual_path = include
+			include_match, found_included_path = include
 			tmp_content += self.content[prev_end:include_match.start()]
 			tmp_content += "// {0}\n".format(include_match.group(0))
-			if not actual_path in self.amalgamation.included_files:
-				t = TranslationUnit(actual_path, self.amalgamation, False)
+			if not found_included_path in self.amalgamation.included_files:
+				t = TranslationUnit(found_included_path, self.amalgamation, False)
 				tmp_content += t.content
 			prev_end = include_match.end()
 		tmp_content += self.content[prev_end:]
@@ -245,12 +249,16 @@ class TranslationUnit(object):
 	
 	def __init__(self, file_path, amalgamation, is_root):
 		self.file_path = file_path
+		self.file_dir = os.path.dirname(file_path)
 		self.amalgamation = amalgamation
 		self.is_root = is_root
 		
 		self.amalgamation.included_files.append(self.file_path)
 		
-		with open(self.file_path, 'r') as f:
+		actual_path = self.amalgamation.actual_path(file_path)
+		if not os.path.isfile(actual_path):
+			raise IOError("File not found: \"{0}\"".format(file_path))
+		with open(actual_path, 'r') as f:
 			self.content = f.read()
 			self._process()
 
