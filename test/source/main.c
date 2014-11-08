@@ -9,6 +9,7 @@ const char* wrap_begin = "begin";
 
 #include "bar.h"
 #include "test.h"
+#include "pragma_once.h"
 
 const char* wrap_end = "end";
 

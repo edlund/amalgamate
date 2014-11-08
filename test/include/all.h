@@ -4,6 +4,7 @@
 #include "foo.h"
 #include "bar.h"
 #include "test.h"
+#include "pragma_once.h"
 
 #endif // ALL_H
 

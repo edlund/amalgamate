@@ -28,6 +28,10 @@ int foo();
 #endif // FOO_H
 
 
+// #include "pragma_once.h"
+
+
+int pragma_once();
 
 int bar();
 
@@ -43,6 +47,8 @@ int bar();
 
 #endif // TEST_H
 
+
+// #include "pragma_once.h"
 
 
 const char* wrap_end = "end";

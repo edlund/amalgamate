@@ -87,7 +87,7 @@ class Amalgamation(object):
 			if not actual_path:
 				raise IOError("File not found: \"{0}\"".format(file_path))
 			print(" - processing \"{0}\"".format(actual_path))
-			t = TranslationUnit(actual_path, self)
+			t = TranslationUnit(actual_path, self, True)
 			amalgamation += t.content
 		
 		with open(self.target, 'w') as f:
@@ -115,6 +115,9 @@ class TranslationUnit(object):
 	# not a concern right now.
 	include_pattern = re.compile(
 		r'#\s*include\s+(<|")(?P<path>.*?)("|>)', re.S)
+
+	# #pragma once
+	pragma_once_pattern = re.compile(r'#\s*pragma\s+once', re.S)
 	
 	# Search for pattern in self.content, add the match to
 	# contexts if found and update the index accordingly.
@@ -125,12 +128,8 @@ class TranslationUnit(object):
 			return match.end()
 		return index + 2
 	
-	# Include all trivial #include directives into self.content.
-	def _include_files(self):
-		content_len = len(self.content)
-		if content_len < len("#include <x>"):
-			return 0
-		
+	# Return all the skippable contexts, i.e., comments and strings
+	def _find_skippable_contexts(self):
 		# Find contexts in the content in which a found include
 		# directive should not be processed.
 		skippable_contexts = []
@@ -138,6 +137,7 @@ class TranslationUnit(object):
 		# Walk through the content char by char, and try to grab
 		# skippable contexts using regular expressions when found.
 		i = 1
+		content_len = len(self.content)
 		while i < content_len:
 			j = i - 1
 			current = self.content[i]
@@ -159,21 +159,64 @@ class TranslationUnit(object):
 				# Skip to the next char.
 				i += 1
 		
+		return skippable_contexts
+		
+	# Returns True if the match is within list of other matches
+	def _is_within(match, matches):
+		for m in matches:
+			if match.start() > m.start() and \
+					match.end() < m.end():
+				return True
+		return False
+	
+	# Removes pragma once from content
+	def _process_pragma_once(self):
+		content_len = len(self.content)
+		if content_len < len("#include <x>"):
+			return 0
+		
+		# Find contexts in the content in which a found include
+		# directive should not be processed.
+		skippable_contexts = self._find_skippable_contexts()
+
+		pragmas = []
+		pragma_once_match = self.pragma_once_pattern.search(self.content)
+		while pragma_once_match:
+			if not TranslationUnit._is_within(pragma_once_match, skippable_contexts):
+				pragmas.append(pragma_once_match)
+			
+			pragma_once_match = self.pragma_once_pattern.search(self.content,
+				pragma_once_match.end())
+		
+		# Handle all collected pragma once directives.
+		prev_end = 0
+		tmp_content = ''
+		for pragma_match in pragmas:
+			tmp_content += self.content[prev_end:pragma_match.start()]
+			prev_end = pragma_match.end()
+		tmp_content += self.content[prev_end:]
+		self.content = tmp_content
+	
+	# Include all trivial #include directives into self.content.
+	def _process_includes(self):
+		content_len = len(self.content)
+		if content_len < len("#include <x>"):
+			return 0
+		
+		# Find contexts in the content in which a found include
+		# directive should not be processed.
+		skippable_contexts = self._find_skippable_contexts()
+		
 		# Search for include directives in the content, collect those
 		# which should be included into the content.
 		includes = []
 		include_match = self.include_pattern.search(self.content)
 		while include_match:
-			should_include = True
-			for context in skippable_contexts:
-				if include_match.start() > context.start() and \
-						include_match.end() < context.end():
-					should_include = False
-					break
-			include_path = include_match.group("path")
-			actual_path = self.amalgamation.file_path(include_path)
-			if should_include and actual_path:
-				includes.append((include_match, actual_path))
+			if not TranslationUnit._is_within(include_match, skippable_contexts):
+				include_path = include_match.group("path")
+				actual_path = self.amalgamation.file_path(include_path)
+				if actual_path:
+					includes.append((include_match, actual_path))
 			
 			include_match = self.include_pattern.search(self.content,
 				include_match.end())
@@ -186,23 +229,30 @@ class TranslationUnit(object):
 			tmp_content += self.content[prev_end:include_match.start()]
 			tmp_content += "// {0}\n".format(include_match.group(0))
 			if not actual_path in self.amalgamation.included_files:
-				t = TranslationUnit(actual_path, self.amalgamation)
+				t = TranslationUnit(actual_path, self.amalgamation, False)
 				tmp_content += t.content
 			prev_end = include_match.end()
 		tmp_content += self.content[prev_end:]
 		self.content = tmp_content
 		
 		return len(includes)
+		
+	# Make all content processing
+	def _process(self):
+		if not self.is_root:
+			self._process_pragma_once()
+		self._process_includes()
 	
-	def __init__(self, file_path, amalgamation):
+	def __init__(self, file_path, amalgamation, is_root):
 		self.file_path = file_path
 		self.amalgamation = amalgamation
+		self.is_root = is_root
 		
 		self.amalgamation.included_files.append(self.file_path)
 		
 		with open(self.file_path, 'r') as f:
 			self.content = f.read()
-			self._include_files()
+			self._process()
 
 def main():
 	description = "Amalgamate C source and header files."

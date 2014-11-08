@@ -24,6 +24,10 @@ int foo();
 
 // #include "foo.h"
 
+// #include "pragma_once.h"
+
+
+int pragma_once();
 
 int bar();
 
@@ -39,6 +43,8 @@ int bar();
 
 #endif // TEST_H
 
+
+// #include "pragma_once.h"
 
 
 #endif // ALL_H
