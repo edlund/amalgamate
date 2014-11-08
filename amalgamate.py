@@ -33,6 +33,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -76,7 +77,7 @@ class Amalgamation(object):
 		
 		if self.prologue:
 			with open(self.prologue, 'r') as f:
-				amalgamation += f.read()
+				amalgamation += datetime.datetime.now().strftime(f.read())
 		
 		if self.verbose:
 			print("Config:")
