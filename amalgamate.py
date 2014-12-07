@@ -165,7 +165,7 @@ class TranslationUnit(object):
 		return skippable_contexts
 		
 	# Returns True if the match is within list of other matches
-	def _is_within(match, matches):
+	def _is_within(self, match, matches):
 		for m in matches:
 			if match.start() > m.start() and \
 					match.end() < m.end():
@@ -185,7 +185,7 @@ class TranslationUnit(object):
 		pragmas = []
 		pragma_once_match = self.pragma_once_pattern.search(self.content)
 		while pragma_once_match:
-			if not TranslationUnit._is_within(pragma_once_match, skippable_contexts):
+			if not self._is_within(pragma_once_match, skippable_contexts):
 				pragmas.append(pragma_once_match)
 			
 			pragma_once_match = self.pragma_once_pattern.search(self.content,
@@ -215,7 +215,7 @@ class TranslationUnit(object):
 		includes = []
 		include_match = self.include_pattern.search(self.content)
 		while include_match:
-			if not TranslationUnit._is_within(include_match, skippable_contexts):
+			if not self._is_within(include_match, skippable_contexts):
 				include_path = include_match.group("path")
 				search_same_dir = include_match.group(1) == '"'
 				found_included_path = self.amalgamation.find_included_file(

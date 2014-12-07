@@ -33,6 +33,7 @@ int foo();
 
 int pragma_once();
 
+
 int bar();
 
 #endif // BAR_H
@@ -51,7 +52,7 @@ int bar();
 // #include "pragma_once.h"
 
 // #include "more/in_nested_dir.h"
-#include <system.h>
+#include <time.h>
 // #include "local.h"
 #ifndef LOCAL_H
 #define LOCAL_H
