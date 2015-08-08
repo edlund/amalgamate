@@ -1,7 +1,9 @@
 
 # amalgamate.py - Amalgamate C source and header files
 
-https://github.com/edlund/amalgamate
+Origin: https://bitbucket.org/erikedlund/amalgamate
+
+Mirror: https://github.com/edlund/amalgamate
 
 `amalgamate.py` aims to make it easy to use SQLite-style C source and header
 amalgamation in projects.
