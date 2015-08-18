@@ -1,5 +1,5 @@
 amalgamate.py - Amalgamate C source and header files
-Copyright (c) 2012, Erik Edlund <erik.o.edlund@gmail.com>
+Copyright (c) 2012, Erik Edlund <erik.edlund@32767.se>
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
